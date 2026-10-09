@@ -24,3 +24,18 @@ export function removeTask(tasks, id) {
 export function selectedTask(tasks, id) {
   return tasks.find((task) => task.id === id) ?? null;
 }
+
+export function updateTask(tasks, id, title, subject = "") {
+  const trimmed = title.trim();
+  const label = subject.trim();
+  if (!trimmed) return null;
+  return tasks.map((task) =>
+    task.id === id
+      ? {
+          ...task,
+          title: trimmed.slice(0, 80),
+          subject: label.slice(0, 24),
+        }
+      : task
+  );
+}

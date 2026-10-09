@@ -10,7 +10,7 @@ import {
   settle,
   start,
 } from "./timer.js";
-import { createTask, removeTask, selectedTask, toggleTask } from "./tasks.js";
+import { createTask, removeTask, selectedTask, toggleTask, updateTask } from "./tasks.js";
 
 const demo = new URLSearchParams(location.search).has("demo");
 const saved = loadState();
@@ -34,6 +34,7 @@ const state = {
   timer: initialTimer(),
   sessions: saved.sessions,
   saveError: false,
+  editingId: null,
 };
 
 const els = {
@@ -51,6 +52,7 @@ const els = {
   modeFocus: document.querySelector("#mode-focus"),
   modeBreak: document.querySelector("#mode-break"),
   completeNote: document.querySelector("#complete-note"),
+  addButton: document.querySelector("#add-submit"),
 };
 
 function persist() {
@@ -172,6 +174,19 @@ function renderTask(task) {
     render();
   });
 
+  const edit = document.createElement("button");
+  edit.type = "button";
+  edit.className = "icon-btn";
+  edit.setAttribute("aria-label", `Edit ${task.title}`);
+  edit.textContent = "Edit";
+  edit.addEventListener("click", () => {
+    state.editingId = task.id;
+    els.title.value = task.title;
+    els.subject.value = task.subject ?? "";
+    els.addButton.textContent = "Save";
+    els.title.focus();
+  });
+
   const remove = document.createElement("button");
   remove.type = "button";
   remove.className = "icon-btn";
@@ -180,11 +195,12 @@ function renderTask(task) {
   remove.addEventListener("click", () => {
     state.tasks = removeTask(state.tasks, task.id);
     if (state.timer.taskId === task.id) state.timer = setTask(state.timer, null);
+    if (state.editingId === task.id) clearEditing();
     persist();
     render();
   });
 
-  item.append(select, complete, remove);
+  item.append(select, edit, complete, remove);
   return item;
 }
 
@@ -219,8 +235,23 @@ els.modeBreak.addEventListener("change", () => {
   render();
 });
 
+function clearEditing() {
+  state.editingId = null;
+  els.form.reset();
+  els.addButton.textContent = "Add";
+}
+
 els.form.addEventListener("submit", (event) => {
   event.preventDefault();
+  if (state.editingId) {
+    const next = updateTask(state.tasks, state.editingId, els.title.value, els.subject.value);
+    if (!next) return;
+    state.tasks = next;
+    clearEditing();
+    persist();
+    render();
+    return;
+  }
   const task = createTask(els.title.value, els.subject.value);
   if (!task) return;
   state.tasks = [task, ...state.tasks];

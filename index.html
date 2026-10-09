@@ -11,6 +11,14 @@
     <link rel="stylesheet" href="./css/styles.css" />
   </head>
   <body>
+    <!--
+      THESIS: One task on a library desk, not a dashboard of study stats.
+      OWN-WORLD: Chalk paper, cobalt timer well, ruled queue, Georgia wordmark, ink type.
+      STORY: Choose a task, start the clock, return to a saved queue.
+      FIRST VIEWPORT: Cobalt timer on the left, ruled task list on the right, Start as the one dominant action.
+      FORM: Library desk, seed 74fc2750.
+      FINISH: unreviewed and undocumented is unfinished; this build ends with the finish review, the verdict, DESIGN.md, and every shipping raster carrying its provenance
+    -->
     <div class="desk">
       <header class="mast">
         <p class="wordmark">Study Sprint</p>
@@ -44,7 +52,7 @@
               Subject
               <input id="task-subject" name="subject" maxlength="24" autocomplete="off" placeholder="Biology" />
             </label>
-            <button type="submit" class="add">Add</button>
+            <button type="submit" class="add" id="add-submit">Add</button>
           </form>
           <p id="empty-queue" class="empty">Write the first thing you need to finish.</p>
           <ul id="task-list" class="task-list"></ul>

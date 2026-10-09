@@ -2,7 +2,7 @@
   --chalk: #f3f6fa;
   --paper: #ffffff;
   --ink: #18324a;
-  --cobalt: #254dc5;
+  --cobalt: #1f4fdd8;
   --cobalt-deep: #1b3aa8;
   --mist: #d7e0fb;
   --muted: #35506a;
@@ -233,7 +233,7 @@ input::placeholder {
 
 .task {
   display: grid;
-  grid-template-columns: 1fr auto auto;
+  grid-template-columns: 1fr auto auto auto;
   gap: 8px;
   align-items: center;
   border-bottom: 1px solid var(--divider);
