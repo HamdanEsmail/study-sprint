@@ -1,0 +1,11 @@
+{
+  "name": "study-sprint",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "A library-desk focus timer with a saved task queue.",
+  "scripts": {
+    "start": "npx --yes serve . -p 4173",
+    "test": "node tests/timer.test.js"
+  }
+}
