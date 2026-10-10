@@ -67,11 +67,17 @@ body {
 .help {
   color: var(--mist);
 }
+
 .muted,
-.empty,
-.complete-note,
 .task-subject {
   color: var(--muted);
+}
+
+.complete-note {
+  min-height: 1.4em;
+  margin: 18px 0 0;
+  color: var(--lamp);
+  font-size: 0.95rem;
 }
 
 .work {
@@ -106,6 +112,7 @@ body {
   min-height: 2.4em;
   font-size: 1.2rem;
   color: var(--mist);
+  overflow-wrap: anywhere;
 }
 
 .timer-actions {
@@ -167,12 +174,6 @@ button {
   padding: 0 0 8px;
 }
 
-.complete-note {
-  min-height: 1.4em;
-  margin: 18px 0 0;
-  color: var(--mist);
-}
-
 .queue {
   background: var(--paper);
   color: var(--ink);
@@ -232,6 +233,10 @@ input::placeholder {
 
 .empty {
   margin: 28px 8px;
+  padding: 12px 14px;
+  border-left: 3px solid var(--lamp);
+  color: var(--muted);
+  font-size: 1.02rem;
 }
 
 .task-list,
@@ -243,7 +248,7 @@ input::placeholder {
 
 .task {
   display: grid;
-  grid-template-columns: 1fr auto auto auto;
+  grid-template-columns: minmax(0, 1fr) auto auto auto;
   gap: 8px;
   align-items: center;
   border-bottom: 1px solid var(--divider);
@@ -258,8 +263,13 @@ input::placeholder {
   background: transparent;
   border: 0;
   min-height: 44px;
+  min-width: 0;
   padding: 6px 4px;
   text-align: left;
+}
+
+.task-title {
+  overflow-wrap: anywhere;
 }
 
 .task.is-selected .task-title {
@@ -281,12 +291,14 @@ input::placeholder {
   border: 0;
   color: var(--muted);
   min-width: 64px;
+  min-height: 44px;
   padding: 0 8px;
 }
 
 .icon-btn:hover {
   color: var(--ink);
 }
+
 .backup-bar {
   display: flex;
   flex-wrap: wrap;
@@ -296,42 +308,66 @@ input::placeholder {
   padding-top: 16px;
   border-top: 1px solid var(--divider);
 }
+
 .backup-bar button,
 .file-label {
-  min-height: 40px;
+  min-height: 44px;
   background: transparent;
-  color: var(--lamp-deep);
+  color: var(--ink);
   border: 1px solid var(--divider);
   font-weight: 650;
 }
+
 .file-label {
+  position: relative;
   display: inline-flex;
   align-items: center;
   padding: 0 16px;
   cursor: pointer;
 }
+
+.file-label:focus-within {
+  outline: 2px solid var(--lamp-deep);
+  outline-offset:3px
+}
+
 .file-label input {
   position: absolute;
   width: 1px;
   height: 1px;
+  min-height: 0;
+  padding: 0;
+  border: 0;
   overflow: hidden;
-  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
 }
+
 .backup-note {
   margin: 0;
   flex-basis: 100%;
-  color: var(--muted);
+  color: var(--ink);
   font-size: 0.9rem;
+  overflow-wrap: anywhere;
 }
+
 .log {
   margin-top: 36px;
   padding-top: 8px;
-  border-top: 1px solid rgba(232, 184, 109, 0.2);
+  border-top: 1px solid rgba(232, 184, 109, 0.22);
 }
 
 .session-list {
   display: grid;
   gap: 8px;
+  color: var(--mist);
+}
+
+.session-list li {
+  overflow-wrap: anywhere;
+}
+
+.session-list .muted {
   color: var(--mist);
 }
 
@@ -342,7 +378,7 @@ input::placeholder {
 
 .help code {
   font-family: ui-monospace, "Cascadia Code", Consolas, monospace;
-  font-size: 0.9em;
+  font-size: 0.9rem;
 }
 
 @media (max-width: 800px) {
@@ -353,8 +389,18 @@ input::placeholder {
 
   .timer-well,
   .queue {
+    min-width: 0;
     min-height: 0;
     width: 100%;
+  }
+
+  .field {
+    min-width: 0;
+  }
+
+  .field input {
+    min-width: 0;
+    width: 100%
   }
 
   .add {
@@ -369,6 +415,46 @@ input::placeholder {
   .mast {
     flex-direction: column;
     gap: 6px;
+  }
+
+  .mast-note {
+    overflow-wrap: anywhere;
+  }
+
+  .task {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .task-select {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 520px) {
+  .desk {
+    width: min(1080px, calc(100% - 20px));
+    padding: 16px 0 32px;
+  }
+
+  .timer-well {
+    padding: 24px 18px 20px;
+  }
+
+  .clock {
+    font-size: 3.6rem;
+  }
+
+  .timer-actions {
+    flex-wrap: wrap;
+  }
+
+  .timer-well .primary,
+  .timer-well #reset {
+    flex: 1 1 120px;
+  }
+
+  .modes {
+    flex-wrap: wrap;
   }
 }
 
