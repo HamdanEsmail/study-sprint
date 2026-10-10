@@ -1,4 +1,4 @@
-import { loadState, saveState } from "./storage.js";
+import { exportBackup, loadState, parseBackup, saveState } from "./storage.js";
 import {
   createTimer,
   formatClock,
@@ -53,6 +53,9 @@ const els = {
   modeBreak: document.querySelector("#mode-break"),
   completeNote: document.querySelector("#complete-note"),
   addButton: document.querySelector("#add-submit"),
+  exportBackup: document.querySelector("#export-backup"),
+  importBackup: document.querySelector("#import-backup"),
+  backupNote: document.querySelector("#backup-note")
 };
 
 function persist() {
@@ -261,7 +264,47 @@ els.form.addEventListener("submit", (event) => {
   persist();
   render();
 });
-
+function applyImportedState(next) {
+  state.tasks = next.tasks;
+  state.sessions = next.sessions;
+  state.timer = demo 
+  ? createTimer ({
+    mode: next.timer?.mode === "break" ? "break" : "focus",
+    demo: true,
+    taskId: next.timer?.taskId ?? null,
+  })
+  : next.timer
+    ? { ...createTimer({ mode: next.timer.mode, taskId: next.timer.taskId }), ...next.timer, demo: false}
+    : createTimer();
+  state.editingId = null;
+  els.form.reset();
+  els.addButton.textContent = "Add";
+}
+els.exportBackup.addEventListener("click", () => {
+  const blob = new Blob([exportBackup(state)], { type: "application/json"});
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = "study-sprint-backup.json";
+  link.click();
+  URL.revokeObjectURL(url);
+  els.backupNote.textContent = "Backup downloaded.";
+});
+els.importBackup.addEventListener("change", async () => {
+  const file = els.importBackup.files[0];
+  els.importBackup.value = "";
+  if (!file) return;
+  const text = await file.text();
+  const result = parseBackup(text);
+  if (!result.ok) {
+    els.backupNote.textContent = result.error;
+    return;
+  }
+  applyImportedState(result.state);
+  persist();
+  render();
+  els.backupNote.textContent = "Backup restored.";
+});
 document.addEventListener("keydown", (event) => {
   const typing =
     event.target instanceof HTMLInputElement || event.target instanceof HTMLTextAreaElement;

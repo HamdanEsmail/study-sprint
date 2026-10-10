@@ -277,7 +277,42 @@ input::placeholder {
 .icon-btn:hover {
   color: var(--ink);
 }
-
+.backup-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid var(--divider);
+}
+.backup-bar button,
+.file-label {
+  min-height: 40px;
+  background: transparent;
+  color: var(--cobalt);
+  border: 1px solid var(--divider);
+  font-weight: 650;
+}
+.file-label {
+  display: inline-flex;
+  align-items: center;
+  padding: 0 16px;
+  cursor: pointer;
+}
+.file-label input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+}
+.backup-note {
+  margin: 0;
+  flex-basis: 100%;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
 .log {
   margin-top: 36px;
   padding-top: 8px;

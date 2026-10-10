@@ -56,6 +56,14 @@
           </form>
           <p id="empty-queue" class="empty">Write the first thing you need to finish.</p>
           <ul id="task-list" class="task-list"></ul>
+          <div class="backup-bar">
+            <button type="button" id="export-backup">Export backup</button>
+            <label class="file-label">
+            Import backup
+            <input id="import-backup" type="file" accept="application/json, .json" />
+          </label>
+          <p id="backup-note" class="backup-note" aria-live="polite"></p>
+          </div>
         </section>
       </main>
 
