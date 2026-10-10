@@ -2,25 +2,44 @@ export const FOCUS_MS = 25 * 60 * 1000;
 export const BREAK_MS = 5 * 60 * 1000;
 export const DEMO_MS = 12 * 1000;
 
-export function durationFor(mode, demo) {
-  if (demo) return DEMO_MS;
-  return mode === "break" ? BREAK_MS : FOCUS_MS;
-}
+export function normalizeSettings(settings = {}) {
+  const source = settings && typeof settings === "object" ? settings : {};
 
-export function createTimer({ mode = "focus", demo = false, taskId = null } = {}) {
-  const durationMs = durationFor(mode, demo);
+  function normalizeDuration(value, fallback) {
+    if (!Number.isFinite(value)) return fallback;
+    const minutes = Math.round(value / 60_000);
+    return Math.min(90, Math.max(1, minutes)) * 60_000;
+  }
+
   return {
-    mode,
-    demo,
-    durationMs,
-    remainingMs: durationMs,
-    endAt: null,
-    running: false,
-    completed: false,
-    taskId,
+    focusMs: normalizeDuration(source.focusMs, FOCUS_MS),
+    breakMs: normalizeDuration(source.breakMs, BREAK_MS),
   };
 }
 
+export function durationFor(mode, demo = false, settings = {}) {
+  if (demo) return DEMO_MS;
+  const durations = normalizeSettings(settings);
+  return mode === "break" ? durations.breakMs : durations.focusMs;
+}
+export function createTimer({
+  mode = "focus",
+  demo = false,
+  taskId = null,
+  settings = {},
+  } = {}) {
+    const durationMs = durationFor(mode, demo, settings);
+    return {
+      mode,
+      demo,
+      durationMs,
+      remainingMs: durationMs,
+      endAt: null,
+      running: false,
+      completed: false,
+      taskId,
+    };
+  }
 export function remainingMs(timer, now) {
   if (!timer.running) return Math.max(0, Number(timer.remainingMs) || 0);
   return Math.max(0, Number(timer.endAt) - now);
@@ -49,19 +68,20 @@ export function pause(timer, now) {
   };
 }
 
-export function reset(timer) {
+export function reset(timer, settings = {}) {
   return createTimer({
     mode: timer.mode,
     demo: timer.demo,
     taskId: timer.taskId,
+    settings,
   });
 }
-
-export function setMode(timer, mode, demo) {
+export function setMode(timer, mode, demo, settings = {}) {
   return createTimer({
     mode,
     demo: demo ?? timer.demo,
     taskId: timer.taskId,
+    settings,
   });
 }
 

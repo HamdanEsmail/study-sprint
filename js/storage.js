@@ -1,3 +1,4 @@
+import { normalizeSettings } from "./timer.js";
 const KEY = "study-sprint.v1";
 
 const emptyState = {
@@ -5,6 +6,7 @@ const emptyState = {
   tasks: [],
   timer: null,
   sessions: [],
+  settings: normalizeSettings(),
 };
 
 function isTask(value) {
@@ -47,6 +49,7 @@ function normalizeState(parsed) {
     tasks,
     timer: parsed.timer ?? null,
     sessions,
+    settings: normalizeSettings(parsed.settings),
   };
 }
 export function parseBackup(raw) {
@@ -73,6 +76,7 @@ export function exportBackup(state) {
       tasks: state.tasks,
       timer: state.timer,
       sessions: state.sessions.slice(-40),
+      settings: normalizeSettings(state.settings),
     },
     null,
     2
@@ -95,6 +99,7 @@ export function saveState(state) {
     tasks: state.tasks,
     timer: state.timer,
     sessions: state.sessions.slice(-40),
+    settings: normalizeSettings(state.settings),
   };
   try {
     localStorage.setItem(KEY, JSON.stringify(payload));

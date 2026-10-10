@@ -15,24 +15,29 @@ import { createTask, removeTask, selectedTask, toggleTask, updateTask } from "./
 const demo = new URLSearchParams(location.search).has("demo");
 const saved = loadState();
 
-function initialTimer() {
-  if (demo) {
-    return createTimer({
-      mode: saved.timer?.mode === "break" ? "break" : "focus",
-      demo: true,
-      taskId: saved.timer?.taskId ?? null,
-    });
+function initialTimer(snapshot = saved) {
+  const fresh = createTimer({
+    mode: snapshot.timer?.mode === "break" ? "break" : "focus",
+    demo,
+    taskId: snapshot.timer?.taskId ?? null,
+    settings: snapshot.settings,
+  });
+  
+  if (demo || !snapshot.timer || snapshot.timer.demo) {
+    return fresh;
   }
-  if (saved.timer) {
-    return { ...createTimer({ mode: saved.timer.mode, taskId: saved.timer.taskId }), ...saved.timer, demo: false };
-  }
-  return createTimer();
+  return {
+    ...fresh,
+    ...snapshot.timer,
+    demo: false,
+  };
 }
 
 const state = {
   tasks: saved.tasks,
   timer: initialTimer(),
   sessions: saved.sessions,
+  settings: saved.settings,
   saveError: false,
   editingId: null,
 };
@@ -55,8 +60,18 @@ const els = {
   addButton: document.querySelector("#add-submit"),
   exportBackup: document.querySelector("#export-backup"),
   importBackup: document.querySelector("#import-backup"),
-  backupNote: document.querySelector("#backup-note")
+  backupNote: document.querySelector("#backup-note"),
+  durationForm: document.querySelector("#duration-form"),
+  durationFields: document.querySelector("#duration-fields"),
+  focusMinutes: document.querySelector("#focus-minutes"),
+  breakMinutes: document.querySelector("#break-minutes"),
+  durationNote: document.querySelector("#duration-note"),
 };
+
+function syncDurationInputs() {
+  els.focusMinutes.value = String(state.settings.focusMs / 60_000);
+  els.breakMinutes.value = String(state.settings.breakMs / 60_000);
+}
 
 function persist() {
   const result = saveState(state);
@@ -108,6 +123,17 @@ function render(now = Date.now()) {
   els.toggle.setAttribute("aria-pressed", String(state.timer.running));
   els.modeFocus.checked = state.timer.mode === "focus";
   els.modeBreak.checked = state.timer.mode === "break";
+  els.durationFields.disabled = state.timer.running;
+
+  const durationMessage = state.timer.running
+  ? "Pause the timer before changing lengths."
+  : demo
+    ? "Demo sessions stay at 12 seconds. Applying Lengths resets the timer."
+    : "Applying lengths resets the current timer.";
+
+  if (els.durationNote.textContent !== durationMessage) {
+    els.durationNote.textContent = durationMessage;
+  }
   els.saveNote.textContent = state.saveError
     ? "This browser blocked saving. Your queue may disappear after refresh."
     : "Saved in this browser only.";
@@ -207,6 +233,22 @@ function renderTask(task) {
   return item;
 }
 
+els.durationForm.addEventListener("submit", (event) => {
+  event.preventDefault();
+  if (state.timer.running || !els.durationForm.reportValidity()) {
+    return;
+  }
+  state.settings = {
+    focusMs: els.focusMinutes.valueAsNumber * 60_000,
+    breakMs: els.breakMinutes.valueAsNumber * 60_000,
+  };
+  state.timer = reset(state.timer, state.settings);
+  els.completeNote.textContent = "";
+  syncDurationInputs();
+  persist();
+  render();
+});
+
 els.toggle.addEventListener("click", () => {
   const now = Date.now();
   state.timer = state.timer.running ? pause(state.timer, now) : start(state.timer, now);
@@ -216,7 +258,7 @@ els.toggle.addEventListener("click", () => {
 });
 
 els.reset.addEventListener("click", () => {
-  state.timer = reset(state.timer);
+  state.timer = reset(state.timer, state.settings);
   els.completeNote.textContent = "";
   persist();
   render();
@@ -224,7 +266,7 @@ els.reset.addEventListener("click", () => {
 
 els.modeFocus.addEventListener("change", () => {
   if (!els.modeFocus.checked) return;
-  state.timer = setMode(state.timer, "focus", demo);
+  state.timer = setMode(state.timer, "focus", demo, state.settings);
   els.completeNote.textContent = "";
   persist();
   render();
@@ -232,7 +274,7 @@ els.modeFocus.addEventListener("change", () => {
 
 els.modeBreak.addEventListener("change", () => {
   if (!els.modeBreak.checked) return;
-  state.timer = setMode(state.timer, "break", demo);
+  state.timer = setMode(state.timer, "break", demo, state.settings);
   els.completeNote.textContent = "";
   persist();
   render();
@@ -267,18 +309,11 @@ els.form.addEventListener("submit", (event) => {
 function applyImportedState(next) {
   state.tasks = next.tasks;
   state.sessions = next.sessions;
-  state.timer = demo 
-  ? createTimer ({
-    mode: next.timer?.mode === "break" ? "break" : "focus",
-    demo: true,
-    taskId: next.timer?.taskId ?? null,
-  })
-  : next.timer
-    ? { ...createTimer({ mode: next.timer.mode, taskId: next.timer.taskId }), ...next.timer, demo: false}
-    : createTimer();
-  state.editingId = null;
-  els.form.reset();
-  els.addButton.textContent = "Add";
+  state.settings = next.settings;
+  state.timer = initialTimer(next);
+  clearEditing();
+  syncDurationInputs();
+  els.completeNote.textContent = "";
 }
 els.exportBackup.addEventListener("click", () => {
   const blob = new Blob([exportBackup(state)], { type: "application/json"});
@@ -306,9 +341,13 @@ els.importBackup.addEventListener("change", async () => {
   els.backupNote.textContent = "Backup restored.";
 });
 document.addEventListener("keydown", (event) => {
-  const typing =
-    event.target instanceof HTMLInputElement || event.target instanceof HTMLTextAreaElement;
-  if (typing) return;
+  if (event.defaultPrevented || event.ctrlKey || event.metaKey || event.altKey) {
+    return;
+  }
+
+  const usingControl = 
+  event.target instanceof Element && event.target.closest("input, textarea, select, button, a, [contenteditable]");
+  if (usingControl) return;
   if (event.code === "Space") {
     event.preventDefault();
     els.toggle.click();
@@ -327,6 +366,7 @@ document.addEventListener("visibilitychange", () => {
   render();
 });
 
+syncDurationInputs();
 render();
 window.setInterval(() => {
   if (state.timer.running) render();

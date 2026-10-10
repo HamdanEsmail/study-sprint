@@ -31,6 +31,23 @@
             <label><input id="mode-focus" type="radio" name="mode" value="focus" checked /> Focus</label>
             <label><input id="mode-break" type="radio" name="mode" value="break" /> Break</label>
           </fieldset>
+          <form id="duration-form" class="duration-form">
+            <fieldset id="duration-fields" class="duration-fields" aria-describedby="duration-note" disabled>
+              <legend>Timer Lengths</legend>
+              <label class="duration-field" for="focus-minutes">
+                Focus minutes 
+                <input id="focus-minutes" name="focusMinutes" type="number" min="1" max="90" step="1" value="25" inputmode="numeric" required />
+              </label>
+              <label class="duration-field" for="break-minutes">
+                Break Minutes
+                <input id="break-minutes" name="breakMinutes" type="number" min="1" max="90" step="1" value="5" inputmode="numeric" required />
+              </label>
+              <button type="submit" id="apply-durations">Apply lengths</button>
+            </fieldset>
+            <p id="duration-note" class="duration-note" aria-live="polite">
+              Applying Lengths resets the current timer
+            </p>
+          </form>
           <p id="complete-note" class="complete-note" aria-live="polite"></p>
         </section>
 
@@ -52,10 +69,10 @@
           <div class="backup-bar">
             <button type="button" id="export-backup">Export backup</button>
             <label class="file-label">
-            Import backup
-            <input id="import-backup" type="file" accept="application/json, .json" />
-          </label>
-          <p id="backup-note" class="backup-note" aria-live="polite"></p>
+              Import backup
+              <input id="import-backup" type="file" accept="application/json, .json" />
+            </label>
+            <p id="backup-note" class="backup-note" aria-live="polite"></p>
           </div>
         </section>
       </main>
