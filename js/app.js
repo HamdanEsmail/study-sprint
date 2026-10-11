@@ -40,6 +40,7 @@ const state = {
   settings: saved.settings,
   saveError: false,
   editingId: null,
+  subjectFilter: "",
 };
 
 const els = {
@@ -66,6 +67,8 @@ const els = {
   focusMinutes: document.querySelector("#focus-minutes"),
   breakMinutes: document.querySelector("#break-minutes"),
   durationNote: document.querySelector("#duration-note"),
+  subjectFilter: document.querySelector("#subject-filter"),
+  filterNote: document.querySelector("#filter-note"),
 };
 
 function syncDurationInputs() {
@@ -73,6 +76,48 @@ function syncDurationInputs() {
   els.breakMinutes.value = String(state.settings.breakMs / 60_000);
 }
 
+function subjectLabel(task) {
+  return typeof task.subject === "string" ? task.subject.trim(): "";
+}
+
+function subjectValue(task) {
+  return `subject:${subjectLabel(task).toLowerCase()}`;
+}
+
+function syncSubjectOptions() {
+  const labels = new Map();
+
+  for (const task of state.tasks) {
+    const value = subjectValue(task);
+
+    if (!labels.has(value)) {
+      labels.set(value, subjectLabel(task) || "No subject");
+    }
+  }
+  if (state.subjectFilter && !labels.has(state.subjectFilter)) {
+    const previousLabel = els.subjectFilter.selectedOptions[0]?.textContent;
+    labels.set(state.subjectFilter, previousLabel || "Selected subject");
+  }
+  const choices = [
+    ["", "All subjects"], ...[...labels].sort((a, b) => a[1].localeCompare(b[1])),
+  ];
+  const currentChoices = [...els.subjectFilter.options].map((option) => [option.value, option.textContent]);
+
+  if (JSON.stringify(choices) !== JSON.stringify(currentChoices)) {
+    const options = choices.map (([value, label]) => {
+      const option = document.createElement("option");
+      option.value = value;
+      option.textContent = label;
+      return option;
+    });
+
+    els.subjectFilter.replaceChildren(...options);
+  }
+
+  if (els.subjectFilter.value !== state.subjectFilter) {
+    els.subjectFilter.value = state.subjectFilter;
+  }
+}
 function persist() {
   const result = saveState(state);
   state.saveError = !result.ok;
@@ -138,15 +183,33 @@ function render(now = Date.now()) {
     ? "This browser blocked saving. Your queue may disappear after refresh."
     : "Saved in this browser only.";
 
-  const open = state.tasks.filter((taskItem) => !taskItem.completed);
-  const done = state.tasks.filter((taskItem) => taskItem.completed);
-  els.empty.hidden = state.tasks.length > 0;
-  els.list.replaceChildren();
+  syncSubjectOptions();
+  
+  const visible = state.tasks.filter(
+    (taskItem) => state.subjectFilter === "" || subjectValue(taskItem) === state.subjectFilter);
 
-  for (const taskItem of [...open, ...done]) {
-    els.list.append(renderTask(taskItem));
-  }
+    const open = visible.filter((taskItem) => !taskItem.completed);
+    const done = visible.filter((taskItem) => taskItem.completed);
 
+    els.empty.hidden = visible.length > 0;
+
+
+    const filterLabel = els.subjectFilter.selectedOptions[0]?.textContent ?? "this subject";
+    els.empty.textContent = state.subjectFilter
+      ? `No tasks for ${filterLabel}. Choose All subjects or add a task with this subject.`
+      : "Write the first thing you need to finish.";
+
+    let filterMessage = `Showing ${visible.length} of ${state.tasks.length} tasks.`; 
+    if (
+      task && state.subjectFilter && subjectValue(task) !== state.subjectFilter ) {
+        filterMessage += " The timer's selected task is outside this filter.";
+      }
+    if (els.filterNote.textContent !== filterMessage) { els.filterNote.textContent = filterMessage; }
+    els.list.replaceChildren();
+
+    for (const taskItem of [...open, ...done]) {
+      els.list.append(renderTask(taskItem));
+    }
   els.sessions.replaceChildren();
   if (state.sessions.length === 0) {
     const item = document.createElement("li");
@@ -233,6 +296,11 @@ function renderTask(task) {
   return item;
 }
 
+els.subjectFilter.addEventListener("change", () => {
+  state.subjectFilter = els.subjectFilter.value;
+  render();
+});
+
 els.durationForm.addEventListener("submit", (event) => {
   event.preventDefault();
   if (state.timer.running || !els.durationForm.reportValidity()) {
@@ -310,6 +378,7 @@ function applyImportedState(next) {
   state.tasks = next.tasks;
   state.sessions = next.sessions;
   state.settings = next.settings;
+  state.subjectFilter = "";
   state.timer = initialTimer(next);
   clearEditing();
   syncDurationInputs();

@@ -248,6 +248,39 @@ button {
   font-weight: 650;
 }
 
+.queue-filter {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+  margin-top: 20px;
+}
+
+.queue-filter label {
+  color: var(--ink);
+  font-size: 0.9rem;
+}
+
+.queue-filter select {
+  flex: 1 1 180px;
+  min-width: 0;
+  max-width: 100%;
+  min-height: 44px;
+  padding: 8px 10px;
+  border: 1px solid var(--divider);
+  background: var(--paper);
+  color: var(--ink);
+  font: inherit;
+  color-scheme: light;
+}
+
+.filter-note {
+  margin: 8px 0 12px;
+  color: var(--ink);
+  font-size: 0.85rem;
+  overflow-wrap: anywhere;
+}
+
 .add-form {
   display: grid;
   grid-template-columns: 1fr 140px auto;

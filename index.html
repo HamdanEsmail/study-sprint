@@ -64,6 +64,13 @@
             </label>
             <button type="submit" class="add" id="add-submit">Add</button>
           </form>
+          <div class="queue-filter">
+            <label for="subject-filter">Show Subject</label>
+            <select id="subject-filter" aria-describedby="filter-note">
+              <option value="">All Subjects</option>
+            </select>
+          </div>
+          <p id="filter-note" class="filter-note" aria-live="polite"></p>
           <p id="empty-queue" class="empty">Write the first thing you need to finish.</p>
           <ul id="task-list" class="task-list"></ul>
           <div class="backup-bar">
