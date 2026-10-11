@@ -69,6 +69,7 @@ const els = {
   durationNote: document.querySelector("#duration-note"),
   subjectFilter: document.querySelector("#subject-filter"),
   filterNote: document.querySelector("#filter-note"),
+  todayFocus: document.querySelector("#today-focus"),
 };
 
 function syncDurationInputs() {
@@ -134,7 +135,7 @@ function currentRemaining(now = Date.now()) {
         title: task?.title ?? (state.timer.mode === "break" ? "Break" : "Focus"),
         mode: state.timer.mode,
         durationMs: state.timer.durationMs,
-        endedAt: now,
+        endedAt: Number.isFinite(state.timer.endAt) ? state.timer.endAt : now,
       },
       ...state.sessions,
     ].slice(0, 40);
@@ -147,6 +148,23 @@ function currentRemaining(now = Date.now()) {
   return remainingMs(state.timer, now);
 }
 
+function todayFocusMinutes(now = Date.now()) {
+  const dayStart = new Date(now);
+  dayStart.setHours(0, 0, 0, 0);
+
+  const dayEnd = new Date(dayStart);
+  dayEnd.setDate(dayEnd.getDate() +1);
+
+  const startMs = dayStart.getTime();
+  const endMs = dayEnd.getTime();
+
+  const totalMs = state.sessions.reduce((total, session) => {
+    const countsToday = session.mode === "focus" && Number.isFinite(session.endedAt) && session.endedAt >= startMs && session.endedAt < endMs && session.endedAt <= now && Number.isFinite(session.durationMs) && session.durationMs > 0;
+    return total + (countsToday ? session.durationMs : 0);
+  }, 0);
+  return totalMs / 60_000;
+}
+
 function announceComplete() {
   const mode = state.timer.mode === "break" ? "Break finished." : "Focus sprint finished.";
   els.completeNote.textContent =
@@ -157,6 +175,11 @@ function announceComplete() {
 
 function render(now = Date.now()) {
   const remaining = currentRemaining(now);
+  const focusMinutes = todayFocusMinutes(now).toLocaleString(undefined, { maximumFractionDigits: 1, });
+  const focusSummary = `Today's focus: ${focusMinutes} min`;
+  if (els.todayFocus.textContent !== focusSummary) {
+    els.todayFocus.textContent = focusSummary;
+  }
   const task = selectedTask(state.tasks, state.timer.taskId);
   els.clock.textContent = formatClock(remaining);
   els.focusTitle.textContent = task
